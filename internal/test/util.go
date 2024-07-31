@@ -1,4 +1,4 @@
-package goffold_test
+package test
 
 import (
 	"testing"

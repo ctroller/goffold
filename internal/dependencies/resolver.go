@@ -3,7 +3,7 @@ package dependencies
 type DependencyHandler func(Dependency) ([]byte, error)
 
 type DependencyResolver struct {
-	Type string
+	Type    string
 	Handler DependencyHandler
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var injects = inject.Inject {
+var injects = inject.Inject{
 	CmdExecutor: inject.CommandExecutor{
 		Exec: func(name string, arg ...string) ([]byte, error) {
 			return []byte(strings.Join(append([]string{name}, arg...), " ")), nil
@@ -18,8 +18,8 @@ var injects = inject.Inject {
 
 func TestSimpleDependency(t *testing.T) {
 	dependency := Dependency{
-		Name: "github.com/ctroller/goffold",
-		Args: GoDependencyArgs {
+		Pkg: "github.com/ctroller/goffold",
+		Args: GoDependencyArgs{
 			Flags: []string{"-u"},
 		},
 	}

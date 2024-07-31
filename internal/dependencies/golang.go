@@ -14,7 +14,7 @@ type GoDependencyArgs struct {
 func GoDependencyHandler(inject inject.Inject) DependencyHandler {
 	return func(dependency Dependency) ([]byte, error) {
 		cmdArgs := []string{"get"}
-		depName := dependency.Name
+		depName := dependency.Pkg
 		if dependency.Version != "" {
 			depName += "@" + dependency.Version
 		}
@@ -36,8 +36,8 @@ func GoDependencyHandler(inject inject.Inject) DependencyHandler {
 		}
 
 		slog.Info("Dependency installed successfully.", "dependency", depName)
-		slog.Debug("Command executed successfully.", "cmd", "go " + strings.Join(cmdArgs, " "), "output", out)
-		
+		slog.Debug("Command executed successfully.", "cmd", "go "+strings.Join(cmdArgs, " "), "output", out)
+
 		return out, nil
 	}
 }

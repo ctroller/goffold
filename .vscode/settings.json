@@ -2,13 +2,19 @@
   "files.associations": {
     "*.tmpl": "html"
   },
-  "css.lint.unknownAtRules": "ignore",
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "go.formatTool": "goimports",
+  "go.useLanguageServer": true,
+
   "[go]": {
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
     "editor.defaultFormatter": "golang.go"
   },
-  "prettier.configPath": "./.prettierrc",
-  "terminal.integrated.shell.linux": "/bin/bash"
+
+  "[gotmpl]": {
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "golang.go"
+  }
 }

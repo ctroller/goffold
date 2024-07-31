@@ -4,16 +4,26 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/ctroller/goffold/internal/dependencies"
 	"github.com/spf13/afero"
+	"gopkg.in/yaml.v3"
 )
 
-type Structure struct {
+type Folder struct {
+	Name        string `yaml:"name"`
+	ExtendsFrom string `yaml:"extends_from"`
+}
+
+type Layout struct {
+	Folders []Folder `yaml:"folders"`
 }
 
 type Template struct {
-	Name   string
-	Path   string
-	Layout Layout
+	Name         string                    `yaml:"name"`
+	Path         string                    `yaml:"-"`
+	Description  string                    `yaml:"description"`
+	Dependencies []dependencies.Dependency `yaml:"dependencies"`
+	Layout       Layout                    `yaml:"layout"`
 }
 
 var TemplateDir string
@@ -32,31 +42,32 @@ func ValidateConfig() error {
 
 func LoadTemplate(name string) (*Template, error) {
 	path := filepath.Join(TemplateDir, name)
-	var layout *Layout
-
-	layoutFile := filepath.Join(path, "layout.yml")
-	_, err := TemplateFs.Stat(layoutFile)
-	if err == nil {
-		handle, err := TemplateFs.Open(layoutFile)
-		if err != nil {
-			return nil, err
-		}
-		defer handle.Close()
-
-		layout, err = LoadLayout(handle)
-		if err != nil {
-			return nil, err
-		}
+	_, err := TemplateFs.Stat(path)
+	if err != nil {
+		return nil, fmt.Errorf("template %v does not exist", name)
 	}
 
-	var l Layout
-	if layout != nil {
-		l = *layout
+	file := filepath.Join(path, "template.yml")
+	_, err = TemplateFs.Stat(file)
+	if err != nil {
+		return nil, fmt.Errorf("template file %v does not exist", file)
 	}
 
-	return &Template{
-		Name:   name,
-		Path:   path,
-		Layout: l,
-	}, nil
+	handle, err := TemplateFs.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer handle.Close()
+
+	var outer struct {
+		Template Template `yaml:"template"`
+	}
+	err = yaml.NewDecoder(handle).Decode(&outer)
+	if err != nil {
+		return nil, err
+	}
+
+	outer.Template.Path = path
+
+	return &outer.Template, nil
 }

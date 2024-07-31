@@ -3,11 +3,12 @@ package dependencies
 import (
 	"testing"
 
+	goffold_test "github.com/ctroller/goffold/internal/test"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
-var TestFS = afero.NewMemMapFs()
+var TestFS = goffold_test.TestFS
 
 func TestLoad(t *testing.T) {
 	afero.WriteFile(TestFS, "dependencies.yml", []byte(`
@@ -21,8 +22,8 @@ func TestLoad(t *testing.T) {
 versions:
   github.com/ctroller/goffold2: "1.1.1"`), 0644)
 
-	depsReader := openFile(t, "dependencies.yml")
-	versionsReader := openFile(t, "dep-versions.yml")
+	depsReader := goffold_test.OpenMemFile(t, "dependencies.yml")
+	versionsReader := goffold_test.OpenMemFile(t, "dep-versions.yml")
 
 	deps := Load(depsReader, versionsReader)
 	expected := []Dependency{
@@ -49,7 +50,7 @@ versions:
   github.com/ctroller/goffold2: "1.1.1"
   some_package: "latest"`), 0644)
 
-	versionsReader := openFile(t, "dep-versions.yml")
+	versionsReader := goffold_test.OpenMemFile(t, "dep-versions.yml")
 	versions := getVersionConstraints(versionsReader)
 
 	expected := VersionConstraints{
@@ -58,13 +59,4 @@ versions:
 	}
 
 	assert.Equal(t, expected, versions)
-}
-
-func openFile(t *testing.T, name string) afero.File {
-	file, err := TestFS.Open(name)
-	if err != nil {
-		assert.Error(t, err)
-	}
-
-	return file
 }

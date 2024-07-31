@@ -1,0 +1,4 @@
+layout:
+  folders:
+    ".devcontainer": 
+      extends_from: "devcontainers/go"

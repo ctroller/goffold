@@ -43,16 +43,15 @@ func getVersionConstraints(in io.Reader) VersionConstraints {
 		return nil
 	}
 
-	type outer struct {
+	var outer struct {
 		Versions VersionConstraints `yaml:"versions"`
 	}
 
 	decoder := yaml.NewDecoder(in)
-	var o outer
-	err := decoder.Decode(&o)
+	err := decoder.Decode(&outer)
 	if err != nil {
 		log.Fatal("Failed to decode dependencies", err)
 	}
 
-	return o.Versions
+	return outer.Versions
 }

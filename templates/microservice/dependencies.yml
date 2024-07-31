@@ -1,3 +1,0 @@
-- name: github.com/gin-gonic/gin
-  args:
-    flags: -u

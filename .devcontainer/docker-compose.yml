@@ -3,8 +3,6 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    env_file:
-        - .env
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity

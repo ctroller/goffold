@@ -1,6 +1,6 @@
 {
   "files.associations": {
-    "*.tmpl": "html"
+    "*.tmpl": "gotmpl"
   },
   "editor.formatOnSave": true,
   "go.formatTool": "goimports",

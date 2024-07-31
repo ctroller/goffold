@@ -19,7 +19,12 @@ func (t *Template) Execute() error {
 		return err
 	}
 
-	err = copyStructure(t, "layout", out)
+	err = importExtends(t, out)
+	if err != nil {
+		return err
+	}
+
+	err = copyStructure(t.Path, "layout", out)
 	if err != nil {
 		return err
 	}
@@ -48,34 +53,35 @@ func createOutputDir(t *Template) (string, error) {
 	return output, nil
 }
 
-func copyStructure(t *Template, templatePath, outputDir string) error {
-	infos, err := afero.ReadDir(TemplateFs, filepath.Join(t.Path, templatePath))
+func copyStructure(basePath, templatePath, outputDir string) error {
+	infos, err := afero.ReadDir(TemplateFs, filepath.Join(basePath, templatePath))
 	if err != nil {
 		return err
 	}
 
 	for _, info := range infos {
 		if info.IsDir() {
-			outputDir := filepath.Join(outputDir, info.Name())
-			newTemplatePath := filepath.Join(templatePath, info.Name())
-			err = OsFs.Mkdir(outputDir, 0755)
-			if err != nil {
-				return err
-			}
-
-			err = copyStructure(t, newTemplatePath, outputDir)
-			if err != nil {
-				return err
-			}
+			err = copyDir(basePath, filepath.Join(templatePath, info.Name()), outputDir)
 		} else {
-			err = parseFile(t, filepath.Join(templatePath, info.Name()), outputDir)
-			if err != nil {
-				return err
-			}
+			err = parseFile(basePath, filepath.Join(templatePath, info.Name()), outputDir)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+func copyDir(basePath, templateDir, targetDir string) error {
+	outputDir := filepath.Join(basePath, targetDir)
+	err := OsFs.Mkdir(outputDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	return copyStructure(basePath, templateDir, outputDir)
 }
 
 func ensureDirDoesNotExist(output string) error {
@@ -93,14 +99,14 @@ const (
 	goTemplateSuffix = ".go.tmpl"
 )
 
-func parseFile(t *Template, templateFile, targetDir string) error {
+func parseFile(basePath, templateFile, targetDir string) error {
 	fileName := filepath.Base(templateFile)
 	var content []byte
 	var err error
 
 	if strings.HasSuffix(templateFile, goTemplateSuffix) {
 		fileName = strings.TrimSuffix(fileName, ".tmpl")
-		content, err = parseGoTemplate(t, templateFile)
+		content, err = parseGoTemplate(basePath, templateFile)
 	} else {
 		content, err = readFileContent(templateFile)
 	}
@@ -110,7 +116,13 @@ func parseFile(t *Template, templateFile, targetDir string) error {
 	}
 
 	targetFile := filepath.Join(targetDir, fileName)
-	slog.Info("Writing file", "target", targetFile, "origFile", templateFile, "targetPath", targetDir)
+	slog.Info("Writing file", "target", targetFile, "origFile", templateFile, "targetPath", targetDir, "base", basePath)
+	handle, err := OsFs.Create(targetFile)
+	if err != nil {
+		return err
+	}
+	defer handle.Close()
+
 	err = afero.WriteFile(OsFs, targetFile, content, 0644)
 	if err != nil {
 		return err
@@ -119,9 +131,9 @@ func parseFile(t *Template, templateFile, targetDir string) error {
 	return nil
 }
 
-func parseGoTemplate(t *Template, templateFile string) ([]byte, error) {
+func parseGoTemplate(basePath, templateFile string) ([]byte, error) {
 	slog.Info("Parsing template", "file", templateFile)
-	tmplData, err := afero.ReadFile(TemplateFs, filepath.Join(t.Path, templateFile))
+	tmplData, err := afero.ReadFile(TemplateFs, filepath.Join(basePath, templateFile))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
@@ -141,4 +153,21 @@ func readFileContent(templateFile string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 	return content, nil
+}
+
+func importExtends(t *Template, targetDir string) error {
+	for _, f := range t.Layout.Folders {
+		if f.ExtendsFrom != "" {
+			extendsPath := filepath.Join(TemplateDir, f.ExtendsFrom)
+			target := filepath.Join(targetDir, f.Name)
+
+			slog.Info("Extending folder", "from", extendsPath, "to", target)
+			err := copyDir("", extendsPath, target)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

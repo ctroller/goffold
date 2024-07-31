@@ -100,16 +100,7 @@ const (
 )
 
 func parseFile(basePath, templateFile, targetDir string) error {
-	fileName := filepath.Base(templateFile)
-	var content []byte
-	var err error
-
-	if strings.HasSuffix(templateFile, goTemplateSuffix) {
-		fileName = strings.TrimSuffix(fileName, ".tmpl")
-		content, err = parseGoTemplate(basePath, templateFile)
-	} else {
-		content, err = readFileContent(templateFile)
-	}
+	content, fileName, err := parseFileContent(basePath, templateFile)
 
 	if err != nil {
 		return err
@@ -129,6 +120,20 @@ func parseFile(basePath, templateFile, targetDir string) error {
 	}
 
 	return nil
+}
+
+func parseFileContent(basePath, templateFile string) ([]byte, string, error) {
+	fileName := filepath.Base(templateFile)
+	var content []byte
+	var err error
+	if strings.HasSuffix(templateFile, goTemplateSuffix) {
+		fileName = strings.TrimSuffix(filepath.Base(templateFile), ".tmpl")
+		content, err = parseGoTemplate(basePath, templateFile)
+	} else {
+		content, err = readFileContent(templateFile)
+	}
+
+	return content, fileName, err
 }
 
 func parseGoTemplate(basePath, templateFile string) ([]byte, error) {

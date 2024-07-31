@@ -1,63 +1,43 @@
 package template
 
 import (
-	"log/slog"
+	"fmt"
 	"path/filepath"
 
-	"github.com/ctroller/goffold/internal/log"
 	"github.com/spf13/afero"
 )
 
+type Structure struct {
+}
+
 type Template struct {
-	Name string
-	Path string
+	Name   string
+	Path   string
 	Layout Layout
 }
 
-var TemplatesPath string
-var Fs afero.Fs
-var templates map[string]Template
+var TemplateDir string
+var OutputDir string
+var TemplateFs afero.Fs
+var OsFs afero.Fs
 
-func InitTemplates() error {
-	if ok, err := afero.DirExists(Fs, TemplatesPath); !ok {
-		log.Fatal("Template path %s does not exist", err, TemplatesPath)
-	}
-
-	templates = make(map[string]Template)
-	items, err := afero.ReadDir(Fs, TemplatesPath)
+func ValidateConfig() error {
+	_, err := TemplateFs.Stat(TemplateDir)
 	if err != nil {
-		log.Fatal("Failed to read templates directory %s", err, TemplatesPath)
-	}
-
-	for _, item := range items {
-		if item.IsDir() {
-			t, err := loadTemplate(item.Name())
-			if err != nil {
-				slog.Error("Failed to load template", "path", filepath.Join(TemplatesPath, item.Name()), "error", err)
-				return err
-			} else {
-				templates[t.Name] = *t
-				slog.Info("Loaded template.", "templateName", t.Name, "path", filepath.Join(TemplatesPath, item.Name()))
-			}
-		}
+		return fmt.Errorf("templates path %v does not exist (using fs %v)", TemplateDir, TemplateFs)
 	}
 
 	return nil
 }
 
-func IsExisting(name string) bool {
-	_, ok := templates[name]
-	return ok
-}
-
-func loadTemplate(name string) (*Template, error) {
-	path := filepath.Join(TemplatesPath, name)
+func LoadTemplate(name string) (*Template, error) {
+	path := filepath.Join(TemplateDir, name)
 	var layout *Layout
 
 	layoutFile := filepath.Join(path, "layout.yml")
-	_, err := Fs.Stat(layoutFile)
+	_, err := TemplateFs.Stat(layoutFile)
 	if err == nil {
-		handle, err := Fs.Open(layoutFile)
+		handle, err := TemplateFs.Open(layoutFile)
 		if err != nil {
 			return nil, err
 		}
@@ -73,10 +53,10 @@ func loadTemplate(name string) (*Template, error) {
 	if layout != nil {
 		l = *layout
 	}
-		
+
 	return &Template{
-		Name: name,
-		Path: path,
+		Name:   name,
+		Path:   path,
 		Layout: l,
 	}, nil
 }

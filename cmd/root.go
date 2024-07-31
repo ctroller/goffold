@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"fmt"
+	"embed"
 	"os"
-	"strings"
 
 	"github.com/ctroller/goffold/internal/dependencies"
 	"github.com/ctroller/goffold/internal/inject"
@@ -18,21 +17,27 @@ var rootCmd = &cobra.Command{
 	Short: "Create golang projects with your preferred structure",
 	Long: `Goffold is a CLI library to create golang projects with your preferred structure.
 This application is a tool to generate the needed files to quickly create a Golang application, using predefined templates.`,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
+	Args: cobra.MinimumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		err := initTemplates()
+		if err != nil {
 			return err
 		}
 
-		if !template.IsExisting(args[0]) {
-			return fmt.Errorf("unknown template %s in template path %s", args[0], template.TemplatesPath)
+		tpl, err := template.LoadTemplate(args[0])
+		if err != nil {
+			return err
+		}
+		err = tpl.Execute()
+		if err != nil {
+			return err
 		}
 
 		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) { 
-		fmt.Println("Hello, World! args are: " + strings.Join(args, " "))
-	},
 }
+
+var DefaultTemplates embed.FS
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -43,22 +48,33 @@ func Execute() {
 	}
 }
 
-func init() {
-	rootCmd.Flags().StringVarP(&template.TemplatesPath, "templates", "t", "./templates", "path to templates")
-	template.Fs = afero.NewOsFs()
+var templateDir string
+var output string
 
+func init() {
+	rootCmd.Flags().StringVarP(&templateDir, "templates", "t", "", "path to templates")
+	rootCmd.Flags().StringVarP(&output, "output", "o", "", "output directory. Defaults to current directory")
 	initResolvers()
-	loadTemplates()
 }
 
 func initResolvers() {
-	dependencies.RegisterResolver(dependencies.DependencyResolver{ 
-		Type: "go",
+	dependencies.RegisterResolver(dependencies.DependencyResolver{
+		Type:    "go",
 		Handler: dependencies.GoDependencyHandler(inject.Defaults),
 	})
 }
 
-func loadTemplates() {
-	// Load templates from the default location
-	template.InitTemplates()
+func initTemplates() error {
+	template.OsFs = afero.NewOsFs()
+	if templateDir == "" {
+		templateDir = "templates"
+		template.TemplateFs = afero.FromIOFS{FS: DefaultTemplates}
+	} else {
+		template.TemplateFs = template.OsFs
+	}
+
+	template.TemplateDir = templateDir
+	template.OutputDir = output
+
+	return template.ValidateConfig()
 }

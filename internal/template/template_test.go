@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLoadTemplate(t *testing.T)	{
+func TestLoadTemplate(t *testing.T) {
 	test.TestFS.MkdirAll("templates/test", 0644)
 	afero.WriteFile(test.TestFS, "templates/test/layout.yml", []byte(`layout:
   folders:
@@ -16,16 +16,14 @@ func TestLoadTemplate(t *testing.T)	{
       extends_from: "devcontainers/go"
 `), 0644)
 
-	Fs = test.TestFS
-	TemplatesPath = "templates"
-	err := InitTemplates()
+	TemplateFs = test.TestFS
+	TemplateDir = "templates"
+	tpl, err := LoadTemplate("test")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	assert.True(t, IsExisting("test"))
-	tpl := templates["test"]
 	assert.Equal(t, "test", tpl.Name)
 	assert.Equal(t, "templates/test", tpl.Path)
 }

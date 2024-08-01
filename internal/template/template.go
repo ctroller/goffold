@@ -18,7 +18,7 @@ type Layout struct {
 	Folders []Folder `yaml:"folders"`
 }
 
-type TemplateVars map[string]string
+type TemplateVars map[string]any
 
 type Template struct {
 	Name         string                    `yaml:"name"`

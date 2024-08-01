@@ -42,3 +42,27 @@ func ReadVars(in io.Reader) ([]Var, error) {
 	err := yaml.NewDecoder(in).Decode(&outer)
 	return outer.Variables, err
 }
+
+func promptVars(t *Template) (TemplateVars, error) {
+	tplVars := TemplateVars{}
+
+	for _, v := range t.Vars {
+		value, err := v.GetValue(t)
+		if err != nil {
+			return nil, err
+		}
+
+		tplVars[v.Name] = convertVar(v, value)
+	}
+
+	return tplVars, nil
+}
+
+func convertVar(v Var, value string) any {
+	switch v.Type {
+	case "bool":
+		return value == "true"
+	default:
+		return value
+	}
+}

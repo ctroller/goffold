@@ -184,18 +184,3 @@ func importExtends(t *Template, targetDir string) error {
 
 	return nil
 }
-
-func promptVars(t *Template) (TemplateVars, error) {
-	tplVars := TemplateVars{}
-
-	for _, v := range t.Vars {
-		value, err := v.GetValue(t)
-		if err != nil {
-			return nil, err
-		}
-
-		tplVars[v.Name] = value
-	}
-
-	return tplVars, nil
-}

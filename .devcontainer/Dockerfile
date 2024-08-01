@@ -1,12 +1,10 @@
-# Stage 1: Node for prettier in VSCode
-FROM node:22-bookworm AS node
-
-# Stage 2: Install act
+# Stage 1: Install act
 FROM debian:bookworm-slim AS act
 RUN apt-get update && apt-get install -y curl sudo && \
+    apt-get clean -y && \
     curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash -s -- -b /usr/local/bin
 
-# Stage 3: Install Go tools
+# Stage 2: Install Go tools
 FROM golang:1.22.5-bookworm AS go-tools
 RUN go install golang.org/x/tools/gopls@latest && \
     go install github.com/go-delve/delve/cmd/dlv@latest && \
@@ -19,9 +17,6 @@ RUN go install golang.org/x/tools/gopls@latest && \
 
 # Final stage: Main image
 FROM mcr.microsoft.com/devcontainers/go:1-1.22-bookworm AS main
-
-# Copy Prettier from node stage
-COPY --from=node /usr/local /usr/local
 
 # Copy act from act stage
 COPY --from=act /usr/local/bin/act /usr/local/bin/act
@@ -36,15 +31,10 @@ ENV CGO_ENABLED=0
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y git curl && \
     # Clean up
-    apt-get autoremove -y && apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apt-get autoremove -y && apt-get clean -y
 
 # Set the working directory
 WORKDIR /workspace
-
-# Make prettier work in vscode with go templates. Absolute disgusting hackfix, but alas
-# https://discourse.gohugo.io/t/formatter-for-go-templates/38403
-RUN npm install -g prettier prettier-plugin-go-template
 
 USER vscode
 

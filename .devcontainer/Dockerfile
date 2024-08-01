@@ -1,6 +1,6 @@
 # Stage 1: Install act
 FROM debian:bookworm-slim AS act
-RUN apt-get update && apt-get install -y curl sudo && \
+RUN apt-get update && apt-get install --no-install-recommends -y curl sudo && \
     apt-get clean -y && \
     curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash -s -- -b /usr/local/bin
 
@@ -29,7 +29,7 @@ ENV CGO_ENABLED=0
 
 # Update and install dependencies
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y git curl && \
+    apt-get install --no-install-recommends -y git curl && \
     # Clean up
     apt-get autoremove -y && apt-get clean -y
 

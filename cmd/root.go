@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"embed"
+	"log/slog"
 	"os"
 
 	"github.com/ctroller/goffold/internal/dependencies"
@@ -52,16 +53,19 @@ var templateDir string
 var output string
 
 func init() {
+	l := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+
+	slog.SetDefault(slog.New(l))
+
 	rootCmd.Flags().StringVarP(&templateDir, "templates", "t", "", "path to templates")
 	rootCmd.Flags().StringVarP(&output, "output", "o", ".", "output directory. Defaults to current directory")
 	initResolvers()
 }
 
 func initResolvers() {
-	dependencies.RegisterResolver(dependencies.DependencyResolver{
-		Type:    "go",
-		Handler: dependencies.GoDependencyHandler(inject.Defaults),
-	})
+	dependencies.RegisterResolver(dependencies.NewGoResolver(inject.Defaults))
 }
 
 func initTemplates() error {

@@ -1,14 +1,20 @@
 package dependencies
 
-type DependencyHandler func(Dependency) ([]byte, error)
-
 type DependencyResolver struct {
-	Type    string
-	Handler DependencyHandler
+	Type     string
+	Resolve  func(dir string, dep Dependency) ([]byte, error)
+	Finisher func(dir string) error
 }
 
-var resolvers = []DependencyResolver{}
+var resolvers = map[string]DependencyResolver{}
 
 func RegisterResolver(resolver DependencyResolver) {
-	resolvers = append(resolvers, resolver)
+	resolvers[resolver.Type] = resolver
+}
+
+func GetResolver(depType string) *DependencyResolver {
+	if resolver, exists := resolvers[depType]; exists {
+		return &resolver
+	}
+	return nil
 }

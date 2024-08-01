@@ -10,7 +10,7 @@ import (
 
 var injects = inject.Inject{
 	CmdExecutor: inject.CommandExecutor{
-		Exec: func(name string, arg ...string) ([]byte, error) {
+		Exec: func(dir string, name string, arg ...string) ([]byte, error) {
 			return []byte(strings.Join(append([]string{name}, arg...), " ")), nil
 		},
 	},
@@ -24,7 +24,7 @@ func TestSimpleDependency(t *testing.T) {
 		},
 	}
 
-	out, err := GoDependencyHandler(injects)(dependency)
+	out, err := NewGoResolver(injects).Resolve("", dependency)
 	if err != nil {
 		assert.Error(t, err)
 	}

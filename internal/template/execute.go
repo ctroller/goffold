@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/ctroller/goffold/internal/dependencies"
 	"github.com/spf13/afero"
 )
 
@@ -39,7 +40,17 @@ func (t *Template) Execute() error {
 		return err
 	}
 
-	return nil
+	resolver := dependencies.GetResolver("go")
+	if resolver == nil {
+		return fmt.Errorf("failed to get resolver for go dependencies")
+	}
+
+	err = installDependencies(t, resolver)
+	if err != nil {
+		return err
+	}
+
+	return resolver.Finisher(OutputDir)
 }
 
 func createOutputDir() error {
@@ -192,6 +203,17 @@ func importExtends(t *Template) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func installDependencies(t *Template, resolver *dependencies.DependencyResolver) error {
+	for _, dep := range t.Dependencies {
+		_, err := resolver.Resolve(OutputDir, dep)
+		if err != nil {
+			return err
 		}
 	}
 

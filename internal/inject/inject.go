@@ -1,9 +1,11 @@
 package inject
 
-import "os/exec"
+import (
+	"os/exec"
+)
 
 type CommandExecutor struct {
-	Exec func(name string, arg ...string) ([]byte, error)
+	Exec func(dir string, name string, arg ...string) ([]byte, error)
 }
 
 type Inject struct {
@@ -16,8 +18,9 @@ var Defaults = Inject{
 
 func DefaultCommandExecutor() CommandExecutor {
 	return CommandExecutor{
-		Exec: func(name string, arg ...string) ([]byte, error) {
+		Exec: func(dir string, name string, arg ...string) ([]byte, error) {
 			cmdExec := exec.Command(name, arg...)
+			cmdExec.Dir = dir
 			return cmdExec.Output()
 		},
 	}

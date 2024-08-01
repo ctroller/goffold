@@ -17,7 +17,7 @@ type Var struct {
 }
 
 func (v Var) GetValue(t *Template) (string, error) {
-	tpl := template.Must(template.New("").Parse(v.Default))
+	tpl := template.Must(template.New("").Funcs(getTemplateFuncs(t)).Parse(v.Default))
 	var buf bytes.Buffer
 
 	err := tpl.Execute(&buf, t)

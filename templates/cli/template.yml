@@ -10,7 +10,11 @@ template:
       args:
         flags: ["-u"]
   variables:
-    - name: package_name
-      prompt: "Enter the package name"
-      default: "{{ .Name }}"
+    - name: module_name
+      prompt: "Enter the module name"
+      default: "{{ output_path }}"
+      type: string
+    - name: go_version
+      prompt: "Define the Go version"
+      default: "1.22.5"
       type: string

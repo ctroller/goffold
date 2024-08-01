@@ -18,12 +18,16 @@ type Layout struct {
 	Folders []Folder `yaml:"folders"`
 }
 
+type TemplateVars map[string]string
+
 type Template struct {
 	Name         string                    `yaml:"name"`
 	Path         string                    `yaml:"-"`
 	Description  string                    `yaml:"description"`
 	Dependencies []dependencies.Dependency `yaml:"dependencies"`
 	Layout       Layout                    `yaml:"layout"`
+	Vars         []Var                     `yaml:"variables"`
+	TemplateVars TemplateVars              `yaml:"-"`
 }
 
 var TemplateDir string

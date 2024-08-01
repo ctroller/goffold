@@ -9,3 +9,8 @@ template:
     - pkg: github.com/spf13/cobra
       args:
         flags: ["-u"]
+  variables:
+    - name: package_name
+      prompt: "Enter the package name"
+      default: "{{ .Name }}"
+      type: string

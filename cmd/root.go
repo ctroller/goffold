@@ -53,7 +53,7 @@ var output string
 
 func init() {
 	rootCmd.Flags().StringVarP(&templateDir, "templates", "t", "", "path to templates")
-	rootCmd.Flags().StringVarP(&output, "output", "o", "", "output directory. Defaults to current directory")
+	rootCmd.Flags().StringVarP(&output, "output", "o", ".", "output directory. Defaults to current directory")
 	initResolvers()
 }
 
